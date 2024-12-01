@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Buttons with Collapsible Container</title>
+  
+  
+  
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!------ Include the above in your HEAD tag ---------->
+
+
+
+<link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
+ 
+  
+  
+  
+  
+  
+  
+  
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* General styles for open buttons */
+    .open-btn {
+      position: fixed;
+      bottom: 20px;
+      z-index: 1030;
+      transform: translateX(-50%);
+    }
+
+    /* Position each open button */
+    #open-btn1 { left: 20%; }
+    #open-btn2 { left: 40%; }
+    #open-btn3 { left: 60%; }
+    #open-btn4 { left: 80%; }
+
+    /* Sticky container for animated buttons */
+    .button-container {
+      position: sticky;
+      top: 0;
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+      z-index: 1030;
+      padding: 10px;
+      background-color: #f8f9fa;
+      flex-wrap: nowrap; /* Ensure the buttons don't wrap onto new lines */
+      overflow-x: auto; /* Allow horizontal scroll if needed */
+    }
+
+    /* Collapsible container styles */
+    #collapsible-container {
+      display: none; /* Initially collapsed */
+      width: 100%;
+      background-color: #f8f9fa;
+      padding: 10px;
+      margin-top: 10px;
+      transition: max-height 0.5s ease-in-out;
+      max-height: 0;
+      overflow: hidden;
+    }
+
+    /* Button styles */
+    .animated-btn {
+      width: 100px;
+      height: 50px;
+      transition: all 0.5s ease-in-out;
+      text-align: left;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      position: relative;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex-direction: row;
+      background-color: #007bff;
+      /* Default size */
+    }
+
+    /* Layout for image and text inside buttons */
+    .animated-btn img {
+      width: 25px;
+      height: 25px;
+      margin-right: 5px;
+      transition: all 0.3s ease-in-out;
+    }
+
+    /* Button expand on hover */
+.animated-btn:hover {
+  width: 200px; /* Make the button 200px wide when hovered */
+  height: 180px; /* Make the button 150px tall when hovered */
+  transition: all 0.3s ease-in-out; /* Smooth transition */
+  flex-direction: column; /* Stack the image and text vertically */
+  justify-content: center; /* Center the content */
+  align-items: center; /* Align content in the center */
+  min-width: 200px;
+}
+
+/* Image grows when button expands */
+.animated-btn:hover img {
+  width: 100px; /* Image becomes bigger when the button expands */
+  height: 80px; /* Maintain aspect ratio */
+}
+
+
+    /* Close button styles */
+    .close-btn {
+  display: none;
+  padding: 5px 10px;
+  background: white;
+  color: black;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 5px; /* Space between buttons */
+  
+}
+    
+
+    /* Link button styles */
+    .link-btn {
+      display: none;
+      margin-bottom: 10px;
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    /* Show close button and link button when expanded */
+    .animated-btn:hover .close-btn,
+    .animated-btn:hover .link-btn {
+      display: inline-block; /* Change to inline-block so they're side-by-side */
+    }
+
+    /* Background colors for each button */
+    .animated-btn-1 { background-color: #007bff; }
+    .animated-btn-2 { background-color: #28a745; }
+    .animated-btn-3 { background-color: #ffc107; }
+    .animated-btn-4 { background-color: #dc3545; }
+
+    /* Container for close and link buttons */
+    .btn-container {
+      display: flex;
+      gap: 10px; /* Space between buttons */
+      margin-top: 10px;
+    }
+
+    /* Hide the toggle button when the container has enough space */
+    #toggle-btn {
+      display: none;
+    }
+    
+    
+    
+    
+    /* Style the scrollbar container */
+::-webkit-scrollbar {
+  width: 12px; /* Width of the vertical scrollbar */
+  height: 12px; /* Height of the horizontal scrollbar */
+}
+
+/* Style the scrollbar track (background of the scrollbar) */
+::-webkit-scrollbar-track {
+  background-color: #f1f1f1; /* Light gray color for the track */
+  border-radius: 10px; /* Rounded corners */
+}
+
+/* Style the scrollbar thumb (the draggable part of the scrollbar) */
+::-webkit-scrollbar-thumb {
+  background-color: #888; /* Darker color for the thumb */
+  border-radius: 10px; /* Rounded corners */
+  border: 2px solid #f1f1f1; /* Border around the thumb */
+}
+
+/* Style the scrollbar thumb on hover */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555; /* Darker color for the thumb when hovered */
+}
+
+    
+    
+  </style>
+</head>
+<body class="bg-light text-center">
+  <!-- Sticky div for animated buttons -->
+  <div id="button-container" class="button-container"></div>
+
+  <!-- Collapsible container for extra buttons -->
+  <div id="collapsible-container">
+    <div class="button-container"></div>
+  </div>
+ 
+  <!-- Open buttons -->
+  <button id="open-btn1" class="btn btn-primary open-btn">Open 1</button>
+  <button id="open-btn2" class="btn btn-success open-btn">Open 2</button>
+  <button id="open-btn3" class="btn btn-warning open-btn">Open 3</button>
+  <button id="open-btn4" class="btn btn-danger open-btn">Open 4</button>
+<button id="open-btn5" class="btn btn-danger open-btn">Open 5</button>
+  <!-- Toggle button for collapsible container -->
+  <button id="toggle-btn" class="btn btn-secondary open-btn">Expand</button>
+f
+<br>
+<br>
+<br>
+<br>
+<button class="close-btn">close</button>
+  <script>
+    // Get references to open buttons, the container, and toggle button
+    const buttonContainer = document.getElementById("button-container");
+    const openButtons = document.querySelectorAll(".open-btn");
+    const collapsibleContainer = document.getElementById("collapsible-container");
+    const toggleBtn = document.getElementById("toggle-btn");
+
+    // Function to create a button dynamically with unique content
+    const createAnimatedButton = (index) => {
+      const button = document.createElement("div");
+      button.classList.add("animated-btn");
+      
+      // Define unique images, text, and link for each button
+      const buttonData = [
+        {
+          image: "https://via.placeholder.com/25?text=1",
+          text: "First Button",
+          link: "https://www.example.com/1",
+          colorClass: "animated-btn-1"
+        },
+        {
+          image: "https://via.placeholder.com/25?text=2",
+          text: "Second Button",
+          link: "https://www.example.com/2",
+          colorClass: "animated-btn-2"
+        },
+        {
+          image: "https://via.placeholder.com/25?text=3",
+          text: "Third Button",
+          link: "https://www.example.com/3",
+          colorClass: "animated-btn-3"
+        },
+        {
+          image: "https://via.placeholder.com/25?text=3",
+          text: "Third Button",
+          link: "https://www.example.com/3",
+          colorClass: "animated-btn-4"
+        },
+        {
+          image: "https://via.placeholder.com/25?text=4",
+          text: "Fifth Button",
+          link: "https://www.example.com/4",
+          colorClass: "animated-btn-5"
+        }
+      ];
+
+      // Set the image, text, link, and color class based on the button index
+      const { image, text, link, colorClass } = buttonData[index];
+
+      button.classList.add(colorClass);
+
+      button.innerHTML = ` 
+      
+      <button class="close-btn">X</button>
+      <br>
+      
+        <img src="${image}" alt="Icon">
+        <span>${text}</span>
+        <div class="btn-container">
+        
+  <a href="${link}" class="link-btn" target="_blank">Go to Link</a>
+        </div>
+        
+      `;
+      button.dataset.index = index;
+
+      // Close button functionality
+      button.querySelector(".close-btn").addEventListener("click", (e) => {
+        e.stopPropagation(); // Prevent triggering hover effects
+        buttonContainer.removeChild(button);
+      });
+
+      return button;
+    };
+
+    // Attach click event to each open button
+    openButtons.forEach((openBtn, index) => {
+      openBtn.addEventListener("click", () => {
+        // Create the animated button with unique content
+        const animatedButton = createAnimatedButton(index);
+
+        // If the container is collapsed, add the button to the collapsible container
+        if (collapsibleContainer.style.display === 'none') {
+          collapsibleContainer.querySelector('.button-container').appendChild(animatedButton);
+        } else {
+          // Otherwise, add it to the top sticky container
+          buttonContainer.appendChild(animatedButton);
+        }
+
+        // Animate the button from open button to top container
+        const openBtnRect = openBtn.getBoundingClientRect();
+        animatedButton.style.position = "absolute";
+        animatedButton.style.left = `${openBtnRect.left}px`;
+        animatedButton.style.top = `${openBtnRect.top}px`;
+        animatedButton.style.display = "flex";
+
+        setTimeout(() => {
+          animatedButton.style.position = "static";
+          animatedButton.classList.add("sticky");
+        }, 50); // Add sticky class after animation
+      });
+    });
+
+    // Toggle collapsible container visibility
+    toggleBtn.addEventListener("click", () => {
+      const containerStyle = collapsibleContainer.style;
+      if (containerStyle.display === 'none' || containerStyle.display === '') {
+        containerStyle.display = 'flex';
+        collapsibleContainer.style.maxHeight = '500px'; // Control the expansion height
+        toggleBtn.innerText = 'Collapse';
+      } else {
+        containerStyle.display = 'none';
+        collapsibleContainer.style.maxHeight = '0';
+        toggleBtn.innerText = 'Expand';
+      }
+    });
+  </script>
+</body>
+</html>
