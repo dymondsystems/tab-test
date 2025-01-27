@@ -1352,20 +1352,21 @@ body {
 </div>
             
           </li>
-   <li class="sidebar-dropdown">
-  <a href="#">
-    <i class="far fa-square"></i>
-    <span>Boards</span>
-    <span class="badge badge-pill badge-danger">0</span>
-  </a>
-  <div class="sidebar-submenu">
-    <ul class="sidebar-submenu">
-      <!-- Board Links Will Be Injected Here -->
-    </ul>
-  </div>
+          <li class="sidebar-dropdown">
+    <a href="#">
+        <i class="far fa-square"></i>
+        <span>Boards</span>
+        <span class="badge badge-pill badge-danger" id="boardCount">0</span>
+    </a>
+    <div class="sidebar-submenu">
+        <ul id="boardList">
+            <!-- Dynamic board links will load here -->
+            <li>
+                <a href="#" class="text-success" id="newBoardLink">+ New board</a>
+            </li>
+        </ul>
+    </div>
 </li>
-
-               
           <li class="sidebar-dropdown">
             <a href="#">
               <i class="fas fa-tasks"></i>
@@ -1630,14 +1631,11 @@ body {
 
 
   <div class="container mt-4">
-    <h2 class="mb-4">Board 1</h2>
+    <h2 class="mb-4" id="boardName">Board name</h2>
     <div id="sectionsContainer">
-      <!-- Dynamic sections and cards will load here -->
-      
-    
+        <!-- Dynamic sections and cards will load here -->
     </div>
-    
-    </div>
+</div>
           
         <div id="popUpSidebar" class="sidebar">
     <button onclick="openWindow()">Open Window</button>
@@ -1646,33 +1644,28 @@ body {
   <div id="sidebarButtonsContainer"></div>
 </div>
   
-    <!-- Add New Board Button -->
-  <div class="container mt-4">
-    <button class="btn btn-success mb-4" data-toggle="modal" data-target="#boardModal">
-      + Add New Board
-    </button>
-  </div>      
+          
 
-     <div class="modal fade" id="boardModal" tabindex="-1" role="dialog" aria-labelledby="boardModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="boardModalLabel">New Board</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <input type="text" id="boardTitle" class="form-control" placeholder="Enter board name">
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        <button type="button" id="saveBoardBtn" class="btn btn-primary">Save</button>
-      </div>
+    <!-- Modal for Board Name -->
+<div class="modal fade" id="boardNameModal" tabindex="-1" aria-labelledby="boardNameModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="boardNameModalLabel">Enter Board Name</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="boardNameInput" placeholder="Board Name">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveBoardName">Save</button>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-
+</div> 
           
           
           
@@ -1956,57 +1949,41 @@ body {
 
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    loadSections();
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize boards and current board index
+  let boards = JSON.parse(localStorage.getItem('boards')) || [];
+  let currentBoardIndex = 0; // Track the currently selected board
 
-    // Add new section
-    document.getElementById('addSectionBtn').addEventListener('click', () => {
-      const sectionTitle = document.getElementById('sectionTitle').value.trim();
-      if (sectionTitle) {
-        const sections = JSON.parse(localStorage.getItem('sections')) || [];
-        const sectionId = `section-${Date.now()}`;
-        sections.push({ id: sectionId, title: sectionTitle });
-        localStorage.setItem('sections', JSON.stringify(sections));
-        document.getElementById('sectionTitle').value = '';
-        loadSections(); // Reload sections
-        showAlert('Section added successfully!', 'success');
-      } else {
-        showAlert('Please enter a section title.', 'warning');
-      }
+  // Render boards in the sidebar
+  function renderBoards() {
+    const boardList = document.getElementById('boardList');
+    boardList.innerHTML = ''; // Clear existing list
+
+    boards.forEach((board, index) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="#" data-board-index="${index}">${board.name}</a>`;
+      boardList.appendChild(li);
     });
 
-    // Save renamed section
-    document.getElementById('saveRenameBtn').addEventListener('click', () => {
-      const sectionId = document.getElementById('renameModal').dataset.sectionId;
-      const newTitle = document.getElementById('renameInput').value.trim();
-      if (newTitle) {
-        const sections = JSON.parse(localStorage.getItem('sections')) || [];
-        const section = sections.find(sec => sec.id === sectionId);
-        if (section) {
-          section.title = newTitle;
-          localStorage.setItem('sections', JSON.stringify(sections));
-          loadSections(); // Reload sections to reflect changes
-          showAlert('Section renamed successfully!', 'success');
-          $('#renameModal').modal('hide');
-        }
-      } else {
-        showAlert('Section title cannot be empty!', 'danger');
-      }
-    });
-  });
+    // Add "New Board" link
+    const newBoardLink = document.createElement('li');
+    newBoardLink.innerHTML = '<a href="#" class="text-success" id="newBoardLink">+ New board</a>';
+    boardList.appendChild(newBoardLink);
 
-  // Load and render sections
+    // Update board count
+    document.getElementById('boardCount').textContent = boards.length;
+  }
+
+  // Load sections for the current board
   function loadSections() {
     const sectionsContainer = document.getElementById('sectionsContainer');
-    const sidebarLinksContainer = document.getElementById('sidebarLinksContainer'); // Ensure this element exists in HTML
-    const sections = JSON.parse(localStorage.getItem('sections')) || [];
+    const sections = boards[currentBoardIndex]?.sections || [];
 
     // Placeholder for no sections
     const placeholder = document.getElementById('noSectionsPlaceholder');
     placeholder.style.display = sections.length === 0 ? 'block' : 'none';
 
-    sectionsContainer.innerHTML = ''; // Clear sections
-    sidebarLinksContainer.innerHTML = ''; // Clear sidebar links
+    sectionsContainer.innerHTML = ''; // Clear existing content
 
     sections.forEach(section => {
       const sectionDiv = document.createElement('div');
@@ -2022,7 +1999,7 @@ body {
               Edit
             </button>
             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton-${section.id}">
-              <a class="dropdown-item" href="/cardbetav1/add-appv2/v3/?sectionId=${section.id}">
+              <a class="dropdown-item" href="/cardbetav1/add-appv2/v3/?boardId=${boards[currentBoardIndex].id}&sectionId=${section.id}">
                 <i class="fas fa-plus"></i> Add app
               </a>
               <a class="dropdown-item" href="#" onclick="openRenameModal('${section.id}', '${section.title}')">
@@ -2037,60 +2014,115 @@ body {
         <div class="row" id="cards-${section.id}">
           <!-- Cards will be dynamically inserted here -->
         </div>
-        <div id="noCardsPlaceholder2-${section.id}" class="alert alert-info text-center" style="display: none; margin-top: 50px; margin-bottom: 150px;">
-          <h4>You've created your first stack!</h4>
-          Add an app to start building out your stack.
-          <br>
-          <a href="/cardbetav1/add-appv2/v3/?sectionId=${section.id}" class="btn btn-success" role="button">Add app</a>
-        </div>
       `;
       sectionsContainer.appendChild(sectionDiv);
-
-      // Add sidebar link
-      const sidebarLink = document.createElement('li');
-      sidebarLink.innerHTML = `
-        <a href="#${section.id}">
-          <i class="fa fa-circle"></i> ${section.title}
-        </a>
-      `;
-      sidebarLinksContainer.appendChild(sidebarLink);
-
-      // Make cards sortable within each section
-      new Sortable(document.getElementById(`cards-${section.id}`), {
-        group: 'shared',
-        animation: 150,
-        onEnd: saveCardsToLocalStorage,
-      });
     });
 
-    loadCards(); // Load cards into sections
+    loadCards(); // Load cards for the current board
   }
 
-  // Open rename modal
+  // Load cards for the current board
+  function loadCards() {
+    const storedCards = JSON.parse(localStorage.getItem('addedCards')) || [];
+    const currentBoardId = boards[currentBoardIndex].id; // Get the current board ID
+
+    // Filter cards for the current board
+    const boardCards = storedCards.filter(card => card.boardId === currentBoardId);
+
+    const placeholder = document.getElementById('noCardsPlaceholder');
+    const placeholder2 = document.getElementById('noCardsPlaceholder2');
+
+    // Show placeholder if no cards exist, otherwise hide it
+    if (boardCards.length === 0) {
+      placeholder.style.display = 'none';
+      placeholder2.style.display = 'block';
+    } else {
+      placeholder.style.display = 'block';
+      placeholder2.style.display = 'none';
+    }
+
+    // Load cards into sections
+    boardCards.forEach(card => {
+      const sectionContainer = document.getElementById(`cards-${card.sectionId}`);
+      if (sectionContainer) {
+        const cardDiv = document.createElement('div');
+        cardDiv.classList.add('col-md-3', 'card-item');
+        cardDiv.dataset.id = card.id;
+        cardDiv.dataset.title = card.title;
+        cardDiv.dataset.image = card.image;
+        cardDiv.dataset.description = card.description;
+        cardDiv.dataset.category = card.category;
+        cardDiv.dataset.modalId = card.modalId;
+
+        cardDiv.innerHTML = `
+          <div class="card border-secondary mb-3">
+            <div class="card-body">
+              <div class="dropdown">
+                <i class="fa fa-ellipsis-v" aria-hidden="true" data-toggle="dropdown" style="float: right;"></i>
+                <div class="dropdown-menu">
+                  <a class="dropdown-item" data-toggle="modal" href="#accountinfo" onclick="showAccountInfo('${card.id}')">Add account info</a>
+                  <a class="dropdown-item" href="#">Edit category</a>
+                  <a class="dropdown-item text-danger" href="#" onclick="removeCard('${card.id}')">Remove</a>
+                </div>
+              </div>
+              <center><img src="${card.image}" alt="${card.title}" class="img-fluid" style="width: 80px; height: 80px;">
+              <h5 class="mt-2">${card.title}</h5>
+              <p>${card.description}</p>
+              <button 
+                type="button" 
+                class="btn btn-primary mt-2" 
+                data-toggle="modal" 
+                data-target="#myModal" 
+                data-title="${card.title}" 
+                data-image="${card.image}" 
+                data-modal="${card.modalId}">
+                Open 
+              </button></center>
+            </div>
+          </div>
+        `;
+        sectionContainer.appendChild(cardDiv);
+      }
+    });
+
+    // Attach modal update functionality after cards are loaded
+    attachModalTitleUpdate();
+  }
+
+  // Open rename modal for sections
   function openRenameModal(sectionId, sectionTitle) {
     document.getElementById('renameModal').dataset.sectionId = sectionId;
     document.getElementById('renameInput').value = sectionTitle;
     $('#renameModal').modal('show');
   }
 
-  // Save cards to localStorage
-  function saveCardsToLocalStorage() {
-    const sections = JSON.parse(localStorage.getItem('sections')) || [];
-    const allCards = [];
-    sections.forEach(section => {
-      const cardContainer = document.getElementById(`cards-${section.id}`);
-      cardContainer.querySelectorAll('.card-item').forEach(card => {
-        allCards.push({
-          id: card.dataset.id,
-          title: card.dataset.title,
-          image: card.dataset.image,
-          description: card.dataset.description,
-          sectionId: section.id,
-          category: card.dataset.category,
-        });
-      });
-    });
-    localStorage.setItem('addedCards', JSON.stringify(allCards));
+  // Save renamed section
+  document.getElementById('saveRenameBtn').addEventListener('click', () => {
+    const sectionId = document.getElementById('renameModal').dataset.sectionId;
+    const newTitle = document.getElementById('renameInput').value.trim();
+    if (newTitle) {
+      const sections = boards[currentBoardIndex].sections;
+      const section = sections.find(sec => sec.id === sectionId);
+      if (section) {
+        section.title = newTitle;
+        localStorage.setItem('boards', JSON.stringify(boards));
+        loadSections(); // Reload sections
+        showAlert('Section renamed successfully!', 'success');
+        $('#renameModal').modal('hide');
+      }
+    } else {
+      showAlert('Section title cannot be empty!', 'danger');
+    }
+  });
+
+  // Remove a section
+  function removeSection(sectionId) {
+    const sections = boards[currentBoardIndex].sections;
+    const updatedSections = sections.filter(sec => sec.id !== sectionId);
+    boards[currentBoardIndex].sections = updatedSections;
+    localStorage.setItem('boards', JSON.stringify(boards));
+    loadSections(); // Reload sections
+    showAlert('Section removed successfully!', 'success');
   }
 
   // Show alerts
@@ -2110,138 +2142,47 @@ body {
       $(alert).alert('close');
     }, 3000);
   }
-</script>
 
-      
-      <script>
-       document.addEventListener('DOMContentLoaded', () => {
-  loadBoards();
+  // Initialize the page
+  renderBoards();
+  if (boards.length > 0) {
+    document.getElementById('boardName').textContent = boards[0].name;
+    loadSections();
+  }
 
-  // Event listener for saving a new board
-  document.getElementById('saveBoardBtn').addEventListener('click', () => {
-    const boardTitle = document.getElementById('boardTitle').value.trim();
-    if (boardTitle) {
-      addBoard(boardTitle);
-      $('#boardModal').modal('hide'); // Close the modal
-    } else {
-      alert('Board name cannot be empty.');
+  // Handle board selection in the sidebar
+  document.getElementById('boardList').addEventListener('click', (e) => {
+    if (e.target.tagName === 'A' && e.target.dataset.boardIndex) {
+      currentBoardIndex = e.target.dataset.boardIndex;
+      const board = boards[currentBoardIndex];
+      document.getElementById('boardName').textContent = board.name;
+      loadSections(); // Load sections for this board
     }
   });
 
-  // Load boards into the sidebar
-  function loadBoards() {
-    const boards = JSON.parse(localStorage.getItem('boards')) || [];
-    const sidebarMenu = document.querySelector('.sidebar-submenu ul');
+  // Handle board creation
+  document.getElementById('newBoardLink').addEventListener('click', () => {
+    $('#boardNameModal').modal('show');
+  });
 
-    sidebarMenu.innerHTML = ''; // Clear existing boards
-
-    boards.forEach(board => {
-      const boardLink = document.createElement('li');
-      boardLink.innerHTML = `<a href="#" onclick="switchBoard('${board.id}')">${board.title}</a>`;
-      sidebarMenu.appendChild(boardLink);
-    });
-
-    // Add "New Board" link
-    const newBoardLink = document.createElement('li');
-    newBoardLink.innerHTML = `<a href="#" class="text-success" data-toggle="modal" data-target="#boardModal">+ New Board</a>`;
-    sidebarMenu.appendChild(newBoardLink);
-
-    // Update board count in the sidebar
-    const boardCount = document.querySelector('.badge-danger');
-    boardCount.textContent = boards.length;
-  }
-
-  // Add a new board
-  function addBoard(title) {
-    const boards = JSON.parse(localStorage.getItem('boards')) || [];
-    const boardId = `board-${Date.now()}`;
-    boards.push({ id: boardId, title, sections: [] });
-    localStorage.setItem('boards', JSON.stringify(boards));
-    loadBoards();
-  }
-
-  // Switch to a selected board
-  window.switchBoard = function (boardId) {
-    const boards = JSON.parse(localStorage.getItem('boards')) || [];
-    const selectedBoard = boards.find(board => board.id === boardId);
-
-    if (selectedBoard) {
-      localStorage.setItem('currentBoard', JSON.stringify(selectedBoard));
-      renderCurrentBoard(); // Update the main page content
-    }
-  };
-
-  // Render the current board on the main page
-  function renderCurrentBoard() {
-    const currentBoard = JSON.parse(localStorage.getItem('currentBoard'));
-    if (!currentBoard) return;
-
-    document.querySelector('.container h2').textContent = currentBoard.title; // Update board name
-    const sectionsContainer = document.getElementById('sectionsContainer');
-    sectionsContainer.innerHTML = ''; // Clear existing sections
-
-    currentBoard.sections.forEach(section => {
-      const sectionDiv = document.createElement('div');
-      sectionDiv.className = 'section-container mb-4';
-      sectionDiv.innerHTML = `<h3>${section.title}</h3>`;
-      sectionsContainer.appendChild(sectionDiv);
-
-      // Add cards to each section
-      section.cards.forEach(card => {
-        const cardDiv = document.createElement('div');
-        cardDiv.className = 'col-md-3 card-item';
-        cardDiv.innerHTML = `<div>${card.title}</div>`;
-        sectionDiv.appendChild(cardDiv);
-      });
-    });
-  }
-
-  // Save sections and cards when switching boards
-  function saveSectionsToCurrentBoard() {
-    const currentBoard = JSON.parse(localStorage.getItem('currentBoard'));
-    const sections = [];
-
-    document.querySelectorAll('.section-container').forEach(sectionDiv => {
-      const sectionId = sectionDiv.id;
-      const sectionTitle = sectionDiv.querySelector('h3').textContent;
-      const cards = [];
-
-      sectionDiv.querySelectorAll('.card-item').forEach(card => {
-        cards.push({
-          id: card.dataset.id,
-          title: card.dataset.title,
-          description: card.dataset.description,
-        });
-      });
-
-      sections.push({ id: sectionId, title: sectionTitle, cards });
-    });
-
-    currentBoard.sections = sections;
-    const boards = JSON.parse(localStorage.getItem('boards')) || [];
-    const boardIndex = boards.findIndex(board => board.id === currentBoard.id);
-
-    if (boardIndex > -1) {
-      boards[boardIndex] = currentBoard;
+  document.getElementById('saveBoardName').addEventListener('click', () => {
+    const boardName = document.getElementById('boardNameInput').value.trim();
+    if (boardName) {
+      const newBoard = {
+        id: `board-${Date.now()}`, // Unique ID for the board
+        name: boardName,
+        sections: []
+      };
+      boards.push(newBoard);
       localStorage.setItem('boards', JSON.stringify(boards));
-      localStorage.setItem('currentBoard', JSON.stringify(currentBoard));
+      renderBoards(); // Update sidebar
+      $('#boardNameModal').modal('hide');
+      document.getElementById('boardNameInput').value = ''; // Clear input
     }
-  }
-
-  // Automatically load the first board on page load
-  const currentBoard = JSON.parse(localStorage.getItem('currentBoard'));
-  if (currentBoard) {
-    renderCurrentBoard();
-  } else {
-    const boards = JSON.parse(localStorage.getItem('boards')) || [];
-    if (boards.length > 0) {
-      localStorage.setItem('currentBoard', JSON.stringify(boards[0]));
-      renderCurrentBoard();
-    }
-  }
+  });
 });
- 
-      </script>
+</script>
+
 
 
     
